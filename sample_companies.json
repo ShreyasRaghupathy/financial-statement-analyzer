@@ -1,0 +1,36 @@
+[
+  {
+    "name": "Tata Motors",
+    "sector": "Automotive",
+    "revenue": 437928,
+    "cogs": 350000,
+    "operating_income": 35000,
+    "net_income": 31800,
+    "total_assets": 300000,
+    "total_liabilities": 205000,
+    "total_equity": 95000,
+    "current_assets": 90000,
+    "current_liabilities": 85000,
+    "inventory": 25000,
+    "cash": 20000,
+    "total_debt": 110000,
+    "interest_expense": 8000
+  },
+  {
+    "name": "Mahindra & Mahindra",
+    "sector": "Automotive",
+    "revenue": 141000,
+    "cogs": 105000,
+    "operating_income": 18000,
+    "net_income": 12800,
+    "total_assets": 180000,
+    "total_liabilities": 95000,
+    "total_equity": 85000,
+    "current_assets": 55000,
+    "current_liabilities": 40000,
+    "inventory": 12000,
+    "cash": 10000,
+    "total_debt": 45000,
+    "interest_expense": 3200
+  }
+]
