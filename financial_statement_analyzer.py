@@ -139,8 +139,14 @@ def apply_shock(c, revenue_decline_pct=0.0, margin_compression_bps=0.0, provisio
     gross_margin_shocked = gross_margin - (margin_compression_bps / 10000.0)
     shocked["cogs"] = revenue * (1 - gross_margin_shocked)
 
+    # The gross-margin compression is a real cost increase: push it through to
+    # operating and net income dollar-for-dollar, otherwise a pure
+    # margin-compression scenario leaves every ratio below the gross line
+    # unchanged.
+    extra_cogs = revenue * (margin_compression_bps / 10000.0)
+
     op_margin = safe_div(c["operating_income"], c["revenue"])
-    shocked["operating_income"] = revenue * op_margin
+    shocked["operating_income"] = revenue * op_margin - extra_cogs
 
     # crude provision hit: assume base "provision" is 10% of operating income
     # unless a more precise field is supplied
@@ -149,7 +155,7 @@ def apply_shock(c, revenue_decline_pct=0.0, margin_compression_bps=0.0, provisio
     shocked["operating_income"] -= extra_provision
 
     net_margin = safe_div(c["net_income"], c["revenue"])
-    shocked["net_income"] = revenue * net_margin - extra_provision
+    shocked["net_income"] = revenue * net_margin - extra_cogs - extra_provision
 
     return shocked
 
@@ -218,14 +224,14 @@ def main():
     parser.add_argument("--revenue-decline-pct", type=float, default=10.0)
     parser.add_argument("--margin-compression-bps", type=float, default=0.0)
     parser.add_argument("--provision-increase-pct", type=float, default=0.0)
-    parser.add_argument("--model", default="claude-fable-5",
-                         help="Model to use for the narrative step (default: claude-fable-5)")
+    parser.add_argument("--model", default="claude-sonnet-5",
+                         help="Model to use for the narrative step (default: claude-sonnet-5)")
     parser.add_argument("--skip-narrative", action="store_true",
                          help="Only compute ratios/anomalies, skip the API call")
     parser.add_argument("--out", default="analysis_report.md")
     args = parser.parse_args()
 
-    with open(args.input_file) as f:
+    with open(args.input_file, encoding="utf-8") as f:
         companies = json.load(f)
 
     base_ratios = {c["name"]: compute_ratios(c) for c in companies}
@@ -255,7 +261,7 @@ def main():
         companies, base_ratios, anomalies, shocked_ratios, shock_params, args.model
     )
 
-    with open(args.out, "w") as f:
+    with open(args.out, "w", encoding="utf-8") as f:
         f.write("# Financial Statement Analysis Report\n\n")
         f.write(narrative)
 
