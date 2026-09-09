@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shreyas Raghupathy — Financial Analysis Portfolio</title>
+<meta name="description" content="Interactive stress-test case studies across automotive, semiconductor, and banking sectors, plus an open-source financial statement analyzer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F6F6F3;
+    --paper-dim: #EDECE6;
+    --ink: #14181C;
+    --muted: #5B6169;
+    --line: #D9D7CE;
+    --gold: #A9812E;
+    --positive: #2F6F5E;
+    --negative: #A3402C;
+    --rail-width: 220px;
+    --measure: 62ch;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,h2,h3{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    line-height: 1.15;
+    margin: 0 0 0.5em 0;
+  }
+
+  .num{ font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  a{ color: var(--ink); }
+
+  /* ---------- layout shell ---------- */
+
+  .shell{
+    display: grid;
+    grid-template-columns: var(--rail-width) 1fr;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  nav.rail{
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 48px 24px 24px 32px;
+    border-right: 1px solid var(--line);
+  }
+
+  nav.rail .name{
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  nav.rail .role{
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 40px;
+    line-height: 1.45;
+  }
+
+  nav.rail ul{ list-style:none; margin:0; padding:0; }
+  nav.rail li{ margin-bottom: 14px; }
+  nav.rail a{
+    text-decoration: none;
+    font-size: 0.88rem;
+    color: var(--muted);
+    border-left: 2px solid transparent;
+    padding-left: 12px;
+    display:block;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  nav.rail a.active{
+    color: var(--ink);
+    border-left-color: var(--gold);
+  }
+  nav.rail a:hover{ color: var(--ink); }
+
+  nav.top{ display:none; }
+
+  main{ padding: 48px 40px 120px 48px; min-width: 0; }
+
+  section{ padding-bottom: 96px; border-bottom: 1px solid var(--line); margin-bottom: 96px; }
+  section:last-of-type{ border-bottom: none; }
+
+  .eyebrow{
+    font-size: 0.78rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  p{ max-width: var(--measure); color: var(--ink); }
+  p.lede{ font-size: 1.05rem; color: var(--muted); max-width: var(--measure); }
+
+  /* ---------- hero ---------- */
+
+  .hero h1{ font-size: 2.6rem; max-width: 14ch; }
+  .hero .sub{ max-width: 52ch; color: var(--muted); font-size: 1.05rem; margin-bottom: 40px; }
+
+  .hero-panel{
+    background: var(--paper-dim);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 28px 32px;
+    max-width: 720px;
+  }
+  .hero-panel .prompt{
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  /* ---------- slider control ---------- */
+
+  .control{ margin: 18px 0 28px 0; max-width: 520px; }
+  .control label{
+    display:flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .control .readout{ color: var(--ink); font-family:'IBM Plex Mono', monospace; }
+
+  input[type="range"]{
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--line);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--gold);
+  }
+  input[type="range"]::-moz-range-thumb{
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: 3px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--gold);
+  }
+  input[type="range"]:focus-visible::-webkit-slider-thumb{ outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* ---------- chart ---------- */
+
+  .chart-wrap{ margin-top: 8px; }
+  .bar-row{ display:flex; align-items:center; gap: 16px; margin-bottom: 14px; }
+  .bar-label{ width: 130px; flex-shrink:0; font-size: 0.85rem; }
+  .bar-track{ flex:1; height: 26px; background: var(--paper-dim); border: 1px solid var(--line); position: relative; overflow:hidden; }
+  .bar-fill{ position:absolute; top:0; bottom:0; left:0; transition: width .25s ease, background .25s ease; }
+  .bar-value{ width: 90px; text-align:right; font-family:'IBM Plex Mono', monospace; font-size: 0.85rem; flex-shrink:0; }
+
+  /* ---------- two column project layout ---------- */
+
+  .project-grid{
+    display:grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+  .project-grid .findings{ margin-top: 20px; }
+  .project-grid .findings li{ margin-bottom: 10px; font-size: 0.95rem; }
+  .project-grid .findings{ padding-left: 20px; }
+
+  .stat-row{ display:flex; gap: 32px; margin: 20px 0 8px 0; flex-wrap: wrap; }
+  .stat{ }
+  .stat .value{ font-family:'IBM Plex Mono', monospace; font-size: 1.5rem; }
+  .stat .label{ font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .stat .value.positive{ color: var(--positive); }
+  .stat .value.negative{ color: var(--negative); }
+
+  .tag{
+    display:inline-block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 3px 9px;
+    border-radius: 2px;
+    margin-right: 8px;
+  }
+
+  .note{
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 14px;
+    max-width: var(--measure);
+  }
+
+  /* ---------- analyzer section ---------- */
+
+  .code-panel{
+    background: var(--ink);
+    color: #E8E6DE;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 20px 24px;
+    border-radius: 2px;
+    overflow-x: auto;
+    line-height: 1.7;
+    max-width: 640px;
+  }
+  .code-panel .c1{ color: #A9812E; }
+  .code-panel .c2{ color: #7FAF9E; }
+
+  .btn{
+    display:inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    border: 1px solid var(--ink);
+    text-decoration:none;
+    font-size: 0.88rem;
+    color: var(--ink);
+    transition: background .15s ease, color .15s ease;
+  }
+  .btn:hover{ background: var(--ink); color: var(--paper); }
+
+  /* ---------- background/footer ---------- */
+
+  .cred-table{ width: 100%; max-width: 620px; border-collapse: collapse; margin-top: 16px; }
+  .cred-table td{ padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 0.92rem; vertical-align: top; }
+  .cred-table td:first-child{ color: var(--muted); width: 40%; }
+
+  footer{ padding: 40px 48px 60px 48px; font-size: 0.82rem; color: var(--muted); }
+  footer a{ color: var(--ink); }
+
+  @media (max-width: 900px){
+    .shell{ grid-template-columns: 1fr; }
+    nav.rail{ display:none; }
+    nav.top{
+      display:flex;
+      overflow-x:auto;
+      gap: 20px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      position: sticky; top:0; background: var(--paper); z-index: 10;
+    }
+    nav.top a{ white-space:nowrap; text-decoration:none; color:var(--muted); font-size:0.85rem; }
+    nav.top a.active{ color: var(--ink); border-bottom: 2px solid var(--gold); padding-bottom: 4px; }
+    main{ padding: 32px 20px 80px 20px; }
+    .project-grid{ grid-template-columns: 1fr; gap: 28px; }
+    .hero h1{ font-size: 2rem; }
+    footer{ padding: 32px 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+    .bar-fill{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail" id="rail">
+    <div class="name">Shreyas Raghupathy</div>
+    <div class="role">US CMA (Parts 1 &amp; 2) · Aspiring Cost Accountant &amp; Financial Analyst</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#automotive">Automotive</a></li>
+      <li><a href="#semiconductors">Semiconductors</a></li>
+      <li><a href="#banking">Banking</a></li>
+      <li><a href="#analyzer">The analyzer</a></li>
+      <li><a href="#background">Background</a></li>
+    </ul>
+  </nav>
+
+  <main>
+
+    <nav class="top" id="topnav">
+      <a href="#overview">Overview</a>
+      <a href="#automotive">Automotive</a>
+      <a href="#semiconductors">Semiconductors</a>
+      <a href="#banking">Banking</a>
+      <a href="#analyzer">Analyzer</a>
+      <a href="#background">Background</a>
+    </nav>
+
+    <!-- ============ HERO / OVERVIEW ============ -->
+    <section id="overview" class="hero">
+      <div class="eyebrow">Financial analysis &amp; stress testing</div>
+      <h1>Same shock, three sectors, three different outcomes.</h1>
+      <p class="sub">
+        Three independent financial models — automotive, semiconductors, and banking —
+        each tested against a stress scenario. Move the control below and watch how
+        differently these companies absorb the same pressure.
+      </p>
+
+      <div class="hero-panel">
+        <div class="prompt">Shock intensity applies proportionally across all three case studies below.</div>
+        <div class="control">
+          <label for="hero-slider">
+            <span>Shock intensity</span>
+            <span class="readout"><span id="hero-slider-val">50</span>%</span>
+          </label>
+          <input type="range" id="hero-slider" min="0" max="100" value="50">
+        </div>
+        <div class="chart-wrap" id="hero-chart"></div>
+        <div class="note">Illustrative summary. Each section below runs the same control against its own tested scenario.</div>
+      </div>
+    </section>
+
+    <!-- ============ AUTOMOTIVE ============ -->
+    <section id="automotive">
+      <div class="eyebrow">Automotive · FY24</div>
+      <h2>Tata Motors vs. Mahindra &amp; Mahindra</h2>
+      <p class="lede">Ratio-based models (ROE, liquidity, solvency) on consolidated FY24 statements, with an operating leverage sensitivity test.</p>
+
+      <div class="project-grid">
+        <div>
+          <div class="stat-row">
+            <div class="stat"><div class="value">33.5%</div><div class="label">Tata Motors ROE, FY24</div></div>
+          </div>
+          <p>
+            Tata's higher return on equity came paired with materially higher earnings
+            volatility. A 10% revenue decline was modeled through both cost structures
+            to test how that volatility plays out under pressure.
+          </p>
+          <ul class="findings">
+            <li>Tata's higher operating leverage means a larger share of costs stay fixed as revenue falls — profit drops faster than revenue.</li>
+            <li>M&amp;M's more diversified cost base cushions the same shock more effectively, despite a lower baseline ROE.</li>
+            <li>The trade-off: Tata's efficiency in good years is the same structure that hurts it in bad ones.</li>
+          </ul>
+          <div class="tag">Ratio analysis</div>
+          <div class="tag">Operating leverage</div>
+          <div class="tag">FY24 consolidated</div>
+        </div>
+
+        <div>
+          <div class="control">
+            <label for="auto-slider">
+              <span>Revenue decline</span>
+              <span class="readout"><span id="auto-slider-val">10</span>%</span>
+            </label>
+            <input type="range" id="auto-slider" min="0" max="20" value="10">
+          </div>
+          <div class="chart-wrap" id="auto-chart"></div>
+          <div class="note">Modeled linearly from the FY24 base case: a 10% revenue decline cuts Tata's profit ~74% vs. ~67% for M&amp;M.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SEMICONDUCTORS ============ -->
+    <section id="semiconductors">
+      <div class="eyebrow">Semiconductors · FY25 / FY24</div>
+      <h2>NVIDIA vs. AMD</h2>
+      <p class="lede">Comparative margin analysis across a $130B+ and a $25B revenue base, stress-tested against a margin compression scenario.</p>
+
+      <div class="project-grid">
+        <div>
+          <div class="stat-row">
+            <div class="stat"><div class="value">$130B+</div><div class="label">NVIDIA revenue base</div></div>
+            <div class="stat"><div class="value">$25B</div><div class="label">AMD revenue base</div></div>
+          </div>
+          <p>
+            Scale alone doesn't explain resilience — margin structure does. A 1,000 bps
+            margin compression scenario was applied to both companies to see which
+            profitability cushion actually holds.
+          </p>
+          <ul class="findings">
+            <li>At the tested compression, NVIDIA retains $71B+ in operating income — its margin base has room to absorb the hit.</li>
+            <li>AMD's thinner baseline margin means the same compression pushes it into negative operating income.</li>
+            <li>The scale gap between the two companies is large, but it's the margin gap that determines who survives the shock.</li>
+          </ul>
+          <div class="tag">Margin analysis</div>
+          <div class="tag">1,000 bps compression</div>
+        </div>
+
+        <div>
+          <div class="control">
+            <label for="semi-slider">
+              <span>Margin compression</span>
+              <span class="readout"><span id="semi-slider-val">1000</span> bps</span>
+            </label>
+            <input type="range" id="semi-slider" min="0" max="1500" step="50" value="1000">
+          </div>
+          <div class="chart-wrap" id="semi-chart"></div>
+          <div class="note">Modeled linearly from each company's FY margin structure to the tested 1,000 bps scenario. NVIDIA operating income shown in $B; AMD crosses zero near the tested point.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BANKING ============ -->
+    <section id="banking">
+      <div class="eyebrow">Banking · CAMELS framework</div>
+      <h2>HDFC Bank vs. ICICI Bank</h2>
+      <p class="lede">CAMELS-framework analysis with a credit risk stress test modeling a rise in loan-loss provisions.</p>
+
+      <div class="project-grid">
+        <div>
+          <div class="stat-row">
+            <div class="stat"><div class="value negative">-19.3%</div><div class="label">HDFC earnings impact</div></div>
+            <div class="stat"><div class="value negative">-4.5%</div><div class="label">ICICI earnings impact</div></div>
+          </div>
+          <p>
+            A 50% rise in loan-loss provisions was modeled across both banks' FY
+            financials to quantify provisioning resilience under the CAMELS framework.
+          </p>
+          <ul class="findings">
+            <li>ICICI's provisioning buffer absorbs the shock with a fraction of the earnings impact HDFC takes.</li>
+            <li>The gap highlights how differently two banks of similar scale can be positioned for a credit cycle downturn.</li>
+            <li>This is the same stress-testing methodology as the automotive and semiconductor studies, applied to a regulated-sector framework.</li>
+          </ul>
+          <div class="tag">CAMELS</div>
+          <div class="tag">Credit risk stress test</div>
+        </div>
+
+        <div>
+          <div class="control">
+            <label for="bank-slider">
+              <span>Provision increase</span>
+              <span class="readout"><span id="bank-slider-val">50</span>%</span>
+            </label>
+            <input type="range" id="bank-slider" min="0" max="100" value="50">
+          </div>
+          <div class="chart-wrap" id="bank-chart"></div>
+          <div class="note">Modeled linearly to the tested 50% provision-increase scenario: HDFC -19.3% vs. ICICI -4.5% earnings impact.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ANALYZER ============ -->
+    <section id="analyzer">
+      <div class="eyebrow">Open-source tool</div>
+      <h2>The engine behind these three studies</h2>
+      <p class="lede">
+        The three case studies above were built by hand. This tool automates the same
+        methodology — ratio calculation, peer-relative anomaly detection, and
+        stress testing — so it can run on any set of companies, not just these three.
+      </p>
+
+      <div class="code-panel">
+<span class="c1">$</span> python3 financial_statement_analyzer.py companies.json \
+    --revenue-decline-pct <span class="c2">10</span>
+
+<span class="c1">→</span> computing liquidity, profitability, leverage, efficiency ratios
+<span class="c1">→</span> flagging peer-relative anomalies (z-score ≥ 1.0)
+<span class="c1">→</span> running stress scenario across all companies
+<span class="c1">→</span> generating analyst narrative
+      </div>
+
+      <ul class="findings" style="margin-top:24px;">
+        <li>Computes the same four ratio families used across all three studies above: liquidity, profitability, leverage, efficiency.</li>
+        <li>Flags anomalies automatically by comparing each company against its peer set, rather than eyeballing the numbers.</li>
+        <li>Runs configurable stress scenarios — revenue decline, margin compression, provision shocks — on any input set.</li>
+        <li>Generates an analyst-style written summary of the findings as a final step.</li>
+      </ul>
+
+      <a class="btn" href="https://github.com/ShreyasRaghupathy/financial-statement-analyzer" target="_blank" rel="noopener">View source on GitHub →</a>
+    </section>
+
+    <!-- ============ BACKGROUND ============ -->
+    <section id="background" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+      <div class="eyebrow">Background</div>
+      <h2>Certifications &amp; experience</h2>
+
+      <table class="cred-table">
+        <tr><td>Certification</td><td>US CMA — Parts 1 &amp; 2 cleared on first attempt, 380/500 each (IMA, 02/2026)</td></tr>
+        <tr><td>Education</td><td>B.Com, Seshadripuram College of Commerce and Science — CGPA 8.9, graduating June 2026</td></tr>
+        <tr><td>Experience</td><td>Finance Intern, Bharat Heavy Electricals Limited (BHEL) — SAP ERP (MIRO/FB03/FBL3N), GST/GSTR-7A compliance verification</td></tr>
+        <tr><td>Technical</td><td>Advanced Excel, Power BI, SAP ERP, Python (this analyzer), AI-assisted financial modeling</td></tr>
+        <tr><td>Targeting</td><td>Cost Accountant &amp; Finance Analyst roles — Bengaluru, Atlanta, and Dubai</td></tr>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  Shreyas Raghupathy · <a href="mailto:shreyasraghupathy@gmail.com">shreyasraghupathy@gmail.com</a> ·
+  <a href="https://linkedin.com/in/shreyasraghupathy" target="_blank" rel="noopener">LinkedIn</a>
+  <br><br>
+  All figures are drawn from independent financial modeling on public company data. Stress-test interpolations shown in the interactive controls are illustrative extensions of the tested scenarios described above.
+</footer>
+
+<script>
+(function(){
+
+  // ---------- generic bar chart renderer ----------
+  function renderBars(containerId, bars){
+    // bars: [{label, value, display, positive}]
+    const maxAbs = Math.max(...bars.map(b => Math.abs(b.value)), 1);
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    bars.forEach(b => {
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+
+      const label = document.createElement('div');
+      label.className = 'bar-label';
+      label.textContent = b.label;
+
+      const track = document.createElement('div');
+      track.className = 'bar-track';
+
+      const fill = document.createElement('div');
+      fill.className = 'bar-fill';
+      const pct = Math.min(100, (Math.abs(b.value) / maxAbs) * 100);
+      fill.style.width = pct + '%';
+      fill.style.background = b.positive ? 'var(--positive)' : 'var(--negative)';
+      track.appendChild(fill);
+
+      const value = document.createElement('div');
+      value.className = 'bar-value num';
+      value.textContent = b.display;
+
+      row.appendChild(label);
+      row.appendChild(track);
+      row.appendChild(value);
+      el.appendChild(row);
+    });
+  }
+
+  // ---------- automotive: revenue decline 0-20%, anchored at 10% ----------
+  const autoSlider = document.getElementById('auto-slider');
+  function updateAuto(){
+    const decline = parseFloat(autoSlider.value);
+    document.getElementById('auto-slider-val').textContent = decline.toFixed(0);
+    const scale = decline / 10; // anchor: 10% decline -> known profit drop
+    const tataDrop = 74 * scale;
+    const mmDrop = 67 * scale;
+    renderBars('auto-chart', [
+      { label: 'Tata Motors', value: tataDrop, display: '-' + tataDrop.toFixed(1) + '%', positive: false },
+      { label: 'Mahindra & M.', value: mmDrop, display: '-' + mmDrop.toFixed(1) + '%', positive: false },
+    ]);
+    return { tataDrop, mmDrop };
+  }
+  autoSlider.addEventListener('input', updateAuto);
+
+  // ---------- semiconductors: margin compression 0-1500 bps, anchored at 1000 ----------
+  const semiSlider = document.getElementById('semi-slider');
+  const NVDA_BASE_OP_INCOME = 81; // $B, implied baseline so that -1000bps -> ~71B retained
+  const AMD_BASE_OP_INCOME = 2.0; // $B, illustrative baseline so shock crosses zero near 1000bps
+  function updateSemi(){
+    const bps = parseFloat(semiSlider.value);
+    document.getElementById('semi-slider-val').textContent = bps.toFixed(0);
+    const scale = bps / 1000;
+    const nvda = NVDA_BASE_OP_INCOME - (10 * scale); // ~ -10B at 1000bps -> 71B
+    const amd = AMD_BASE_OP_INCOME - (2.5 * scale);  // crosses ~0 near 1000bps
+    renderBars('semi-chart', [
+      { label: 'NVIDIA', value: nvda, display: '$' + nvda.toFixed(0) + 'B', positive: nvda >= 0 },
+      { label: 'AMD', value: amd, display: '$' + amd.toFixed(1) + 'B', positive: amd >= 0 },
+    ]);
+  }
+  semiSlider.addEventListener('input', updateSemi);
+
+  // ---------- banking: provision increase 0-100%, anchored at 50% ----------
+  const bankSlider = document.getElementById('bank-slider');
+  function updateBank(){
+    const inc = parseFloat(bankSlider.value);
+    document.getElementById('bank-slider-val').textContent = inc.toFixed(0);
+    const scale = inc / 50;
+    const hdfc = 19.3 * scale;
+    const icici = 4.5 * scale;
+    renderBars('bank-chart', [
+      { label: 'HDFC Bank', value: hdfc, display: '-' + hdfc.toFixed(1) + '%', positive: false },
+      { label: 'ICICI Bank', value: icici, display: '-' + icici.toFixed(1) + '%', positive: false },
+    ]);
+  }
+  bankSlider.addEventListener('input', updateBank);
+
+  // ---------- hero: composite summary driven by one slider ----------
+  const heroSlider = document.getElementById('hero-slider');
+  function updateHero(){
+    const pct = parseFloat(heroSlider.value); // 0-100, maps to each section's full tested range
+    document.getElementById('hero-slider-val').textContent = pct.toFixed(0);
+    const scale = pct / 100;
+    const tataDrop = 74 * scale;
+    const nvda = NVDA_BASE_OP_INCOME - (10 * scale);
+    const hdfc = 19.3 * scale;
+    renderBars('hero-chart', [
+      { label: 'Tata Motors', value: tataDrop, display: '-' + tataDrop.toFixed(0) + '%', positive: false },
+      { label: 'NVIDIA', value: Math.max(nvda,0), display: '$' + Math.max(nvda,0).toFixed(0) + 'B', positive: true },
+      { label: 'HDFC Bank', value: hdfc, display: '-' + hdfc.toFixed(0) + '%', positive: false },
+    ]);
+  }
+  heroSlider.addEventListener('input', updateHero);
+
+  // initial render
+  updateAuto();
+  updateSemi();
+  updateBank();
+  updateHero();
+
+  // ---------- active nav highlighting ----------
+  const sections = document.querySelectorAll('main section[id]');
+  const railLinks = document.querySelectorAll('nav.rail a');
+  const topLinks = document.querySelectorAll('nav.top a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        [...railLinks, ...topLinks].forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+})();
+</script>
+
+</body>
+</html>
