@@ -32,7 +32,7 @@ Options:
 - `--revenue-decline-pct` — % revenue decline in the stress scenario (default 10)
 - `--margin-compression-bps` — basis points shaved off gross margin under stress
 - `--provision-increase-pct` — % rise in an assumed loan-loss provision (for banks)
-- `--model` — Claude model to use for the narrative step (default `claude-fable-5`)
+- `--model` — Claude model to use for the narrative step (default `claude-sonnet-5`)
 - `--skip-narrative` — only compute ratios/anomalies locally, skip the API call
 - `--out` — output file for the narrative report (default `analysis_report.md`)
 
